@@ -1,0 +1,313 @@
+---
+title: "6600: Final Project"
+output: html_document
+date: "2023-10-13"
+---
+
+```{r setup, include=FALSE}
+library(glmnet)
+library(car)
+library(effects)
+library(psycho)
+library(tidyverse)
+library(ROCR)
+library(caret)
+library(topicmodels)
+library(ggplot2)
+library(dplyr)
+library(tidytext)
+library(tidyr)
+library(RTextTools)
+library(wordcloud)
+library(tm)
+library(stringr)
+library(quanteda)
+library(reshape2)
+library(quanteda.textplots)
+```
+
+
+## Read the datasets
+```{r }
+regdf=read.csv(url("http://data.mishra.us/files/project_data.csv"))
+textdf=read.csv(url("http://data.mishra.us/files/project_reviews.csv"))
+
+head(regdf)
+head(textdf)
+```
+
+## Convert the categorical variables into factors
+```{r }
+#regdf$education <- factor(regdf$education)
+#regdf$job <- factor(regdf$job)
+#regdf$seen_alone <- factor(regdf$seen_alone)
+#regdf$discount <- factor(regdf$discount)
+```
+
+## Check the levels and their corresponding values
+```{r }
+#education_levels <- levels(regdf$education)
+#job_levels <- levels(regdf$job)
+#seen_alone_levels <- levels(regdf$seen_alone)
+#discount_levels <- levels(regdf$discount)
+```
+
+**Regression analysis**
+## Fit a Linear Regression model on the full dataset
+```{r }
+lm_model=lm(amount_spent~., data=regdf)
+summary(lm_model)
+```
+
+## Fit a Linear Regression model on the 80/20 split dataset
+```{r }
+set.seed(1234)
+datasplit <- createDataPartition(regdf$amount_spent, p = 0.8, list=FALSE)
+trainData <- regdf[datasplit,]
+testData <- regdf[-datasplit,]
+lm_model2=lm(amount_spent~., data=trainData)
+summary(lm_model2)
+```
+## Predict results for Linear Regression model on the 80/20 split dataset
+```{r }
+predictions <- predict(lm_model2, newdata= testData)
+postResample(predictions, testData$amount_spent)
+```
+## Fit a Linear Regression model on the 70/30 split dataset
+```{r }
+set.seed(1234)
+datasplit <- createDataPartition(regdf$amount_spent, p = 0.7, list=FALSE)
+trainData <- regdf[datasplit,]
+testData <- regdf[-datasplit,]
+lm_model3=lm(amount_spent~., data=trainData)
+summary(lm_model3)
+```
+
+## Predict results for Linear Regression model on the 70/30 split dataset
+```{r }
+predictions <- predict(lm_model3, newdata= testData)
+postResample(predictions, testData$amount_spent)
+```
+## ANOVA for significance test
+```{r }
+anova(lm_model)
+anova(lm_model2)
+anova(lm_model3)
+```
+
+# Use VIF (Variance Inflation Factor) to test for multicollinearity
+```{r }
+vif_values <- car::vif(lm_model)
+print(vif_values)
+```
+
+## Create a correlation plot to check for multicollinearity
+```{r pressure, echo=FALSE}
+correl <- cor(regdf[,c("age","streaming","days_member","movies_seen")])
+ggcorrplot::ggcorrplot(correl,hc.order=TRUE,type="lower",lab=TRUE)
+```
+**Penalized Regression**
+## Fit a Ridge Regression model
+```{r }
+set.seed(1234)
+datasplit <- createDataPartition(regdf$amount_spent, p = 0.8, list=FALSE)
+trainData <- regdf[datasplit,]
+testData <- regdf[-datasplit,]
+trainpredictors <- trainData[, !(names(trainData) == "amount_spent")]
+ridge_model <- cv.glmnet(x=data.matrix(trainpredictors), 
+                         y=trainData$amount_spent, 
+                         alpha=0, nfolds=4, standardize=TRUE, type.measure="mae")
+ridge_coef <- coef(ridge_model, s="lambda.min", exact=FALSE)
+print(ridge_coef)
+```
+
+## Obtain predictions from the Ridge Regression model
+```{r }
+testpredictors <- testData[, !(names(testData) == "amount_spent")]
+pred = predict(ridge_model,newx=data.matrix(testpredictors),s="lambda.min")
+# Calculate MAE
+mae <- mean(abs(pred - testData$amount_spent))
+
+# Calculate RMSE
+rmse <- sqrt(mean((pred - testData$amount_spent)^2))
+
+# Calculate R-squared
+r_squared <- R2(pred, testData$amount_spent)
+#r_squared <- 1 - sum((pred - testData$amount_spent)^2) / sum((testData$amount_spent - #mean(testData$amount_spent))^2)
+
+# Print the results
+cat("MAE:", mae, "\n")
+cat("RMSE:", rmse, "\n")
+cat("R-squared:", r_squared, "\n")
+```
+
+## LASSO Regression model
+```{r }
+lasso_model <- cv.glmnet(x=data.matrix(trainpredictors), 
+                         y=trainData$amount_spent, 
+                         alpha=1, nfolds=4, standardize=TRUE, type.measure="mae")
+
+lasso_coef <- coef(lasso_model, s="lambda.min", exact=FALSE)
+print(lasso_coef)
+```
+
+## Obtain predictions from the Lasso Regression model
+```{r }
+testpredictors <- testData[, !(names(testData) == "amount_spent")]
+pred = predict(lasso_model,newx=data.matrix(testpredictors),s="lambda.min")
+# Calculate MAE
+mae <- mean(abs(pred - testData$amount_spent))
+
+# Calculate RMSE
+rmse <- sqrt(mean((pred - testData$amount_spent)^2))
+
+# Calculate R-squared
+r_squared <- R2(pred, testData$amount_spent)
+#r_squared <- 1 - sum((pred - testData$amount_spent)^2) / sum((testData$amount_spent - #mean(testData$amount_spent))^2)
+
+# Print the results
+cat("MAE:", mae, "\n")
+cat("RMSE:", rmse, "\n")
+cat("R-squared:", r_squared, "\n")
+```
+
+**Text Analysis**
+
+## Create WordCloud for reviews with 3, 4 or 5 stars
+```{r }
+# Filter reviews by star ratings using the original data frame
+positive_reviews_data <- textdf[textdf$star >= 3, ]
+# remove stopwords
+positivereview_corpus <- VCorpus(VectorSource(positive_reviews_data$text))
+# a function to clean /,@,\\,|
+toSpace <- content_transformer(function(x, pattern) gsub(pattern, " ", x))
+positivereview_corpus <- tm_map(positivereview_corpus, toSpace, "/|@|\\|")
+positivereview_corpus<- tm_map(positivereview_corpus, stripWhitespace) # remove white space
+# covert all to lower case else same word as lower and uppercase will classified as different
+positivereview_corpus <- tm_map(positivereview_corpus, content_transformer(tolower))
+# remove numbers
+positivereview_corpus <- tm_map(positivereview_corpus, removeNumbers) 
+# remove punctuations
+positivereview_corpus <- tm_map(positivereview_corpus, removePunctuation) 
+positivereview_corpus <- tm_map(positivereview_corpus, removeWords, stopwords("en"))
+
+positivereview_dtm <- TermDocumentMatrix(positivereview_corpus)
+#rowTotals <- apply(positivereview_dtm , 1, sum)
+#positivereview_dtm <- positivereview_dtm[rowTotals> 0, ]
+#Convert document to term matrix object as matrix
+mtrix <- as.matrix(positivereview_dtm)
+#sort in descending order
+v <- sort(rowSums(mtrix), decreasing=TRUE)
+d <- data.frame(word=names(v), freq=v)
+
+  wordcloud(words = d$word,
+            freq = d$freq,
+            min.freq = 1,max.words=100,random.order=FALSE,rot.per=0.35,
+            scale = c(3, 0.7),
+            colors = "darkgreen",
+            main = "Word Cloud for Positive Reviews")
+  
+```
+
+## Create WordCloud for reviews with 1 or 2 stars
+```{r }
+# Filter reviews by star ratings using the original data frame
+negative_reviews_data <- textdf[textdf$star <= 2, ]
+
+# remove stopwords
+negativereview_corpus <- VCorpus(VectorSource(negative_reviews_data$text))
+negativereview_corpus <- tm_map(negativereview_corpus, toSpace, "/|@|\\|")
+negativereview_corpus<- tm_map(negativereview_corpus, stripWhitespace) # remove white space
+# covert all to lower case else same word as lower and uppercase will classified as different
+negativereview_corpus <- tm_map(negativereview_corpus, content_transformer(tolower))
+# remove numbers
+negativereview_corpus <- tm_map(negativereview_corpus, removeNumbers) 
+# remove punctuations
+negativereview_corpus <- tm_map(negativereview_corpus, removePunctuation) 
+negativereview_corpus <- tm_map(negativereview_corpus, removeWords, stopwords("en"))
+
+negativereview_dtm <- TermDocumentMatrix(negativereview_corpus)
+#Convert document to term matrix object as matrix
+mtrix <- as.matrix(negativereview_dtm)
+#sort in descending order
+v <- sort(rowSums(mtrix), decreasing=TRUE)
+d <- data.frame(word=names(v), freq=v)
+
+  wordcloud(words = d$word,
+            freq = d$freq,
+            min.freq = 1,max.words=100,random.order=FALSE,rot.per=0.35,
+            scale = c(3, 0.7),
+            colors = "darkred",
+            main = "Word Cloud for Negative Reviews") 
+  
+```
+
+## Perform a Latent Dirichlet Analysis
+```{r }
+# remove stopwords
+corpus <- VCorpus(VectorSource(textdf$text))
+corpus <- tm_map(corpus, toSpace, "/|@|\\|")
+corpus<- tm_map(corpus, stripWhitespace) # remove white space
+# covert all to lower case else same word as lower and uppercase will classified as different
+corpus <- tm_map(corpus, content_transformer(tolower))
+# remove numbers
+corpus <- tm_map(corpus, removeNumbers) 
+# remove punctuations
+corpus <- tm_map(corpus, removePunctuation) 
+corpus <- tm_map(corpus, removeWords, stopwords("en"))
+
+dtm <- DocumentTermMatrix(corpus)
+set.seed(234)
+rowTotals <- apply(dtm , 1, sum)
+dtm <- dtm[rowTotals> 0, ]
+lda <- LDA(dtm, k = 3, method = "Gibbs", control = NULL)
+topics <- tidy(lda, matrix = "beta") # beta is the topic-word density
+```
+
+
+## Topic Modeling
+```{r }
+top_terms <- topics %>%
+  group_by(topic) %>%
+  top_n(10,beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+top_terms %>%
+  mutate(term=reorder(term, beta)) %>%
+  ggplot(aes(term,beta,fill=factor(topic))) +
+  geom_col(show.legend=FALSE) +
+  facet_wrap(~topic,scales="free") +
+  coord_flip()
+```
+
+## 1. Of the 8 predictors, which predictors have a significant influence on amount spent on concessions? Which predictors are multicollinear? Justify your response with reasons from the analysis.
+### age, streaming, days_member and movies_seen predictors have a significant influence on the amount spent on concessions as they are showing the p-value of less than 0.05.  
+### We used correlation plot and VIF to check for multicollinearity. All the VIF values are below 5 and all the correlation values are less then 0.5 hence both indicating there are no multicollinearity among the predictor variables. 
+
+## 2. Which predictors have a positive influence and which predictors have a negative influence on the amount spent on concessions? Which analysis, regression or penalized regression, helped you answer this question? If you ran a neural net model, can it help you find the significant (or not) predictors and their magnitude and direction of influence on the outcome?
+### age, job, see_alone,days_member and movies_seen have a positive influence while streaming, education and disount have negative influence on the amount spent on concessions. We used Ridge Regression Analysis for this. 
+### Neural net model is a black-box method which provides predictions whithout clear or interpretable explanations and does not directly provide the coefficients like regression models. Hence, it would not help us find the significance, magnitude and direction of influence of predictors on the outcome like regression does.
+
+## 3. Which analysis, linear regression or penalized regression, helps you select relevant variables? Which predictor variables would you use in the model? Justify your answer using the analysis. Would a Ridge or a LASSO help in selecting relevant predictors?
+### Lasso regression helps in selecting the relevant predictors by shrinking the predictor coefficient estimates to 0. age, streaming, days_member and movies_seen
+
+## 4. If you split the data 70-30 versus 80-20, how does it influence RMSE and R-squared values of the linear regression?
+### The more data we use for training, the better the test results will be. Using the 80-20 data split vs 70-30 data split the error metrics RMSE and MAE were lower and the R-squared value was higher.
+
+80/20 test
+RMSE  Rsquared       MAE 
+9.6496312 0.6674792 7.6528047 
+
+70/30 test
+RMSE Rsquared      MAE 
+9.788593 0.554890 7.802252 
+
+## 5. Given the regression analysis, what strategies can MovieMagic come up with to increase amount spent on concessions? Discuss the magnitude and direction of the anticipated effect. Use both statistical justification and a simplified explanation (anticipating many decision-makers at MovieMagic may not know all the technical jargon).
+### Targetting the loyal customers. 
+
+## 6. MovieMagic wants to visualize the reviews through a wordcloud and wants to find out which words are used most commonly in the reviews that customers write for MovieMagic. Create 2 wordclouds - one for reviews that received 3, 4, or 5 star ratings and another with reviews that received 1 or 2 stars ratings. Knowing the prominent words in each of the wordclouds, what strategies can be developed in messaging customers? Would the strategies differ?
+### We see that in both the positive and negative reviews food is one of the most prominent word. This indicates that people goto movies they are rating the experience not just based on their movie watching experience but also on the food items and the service or ambience in general of the movie theatre.  
+
+## 7. MovieMagic also wants to use topic modeling to find out whether the content in the reviews could be categorized into specific topics. If you used LDA to create 3 topic groups (k = 3), MovieMagic wants you to use the words within the 3 topics to infer topic title. Which term is the most relevant in each of the three topics and how would it inform your business strategy? Given the topics you inferred what strategies would you suggest are possible for MovieMagic if it wants to increase con-cession sales. Would you recommend promotions or advertising or loyalty program;justify your choice of business strategy?
+## Loyalty program.
