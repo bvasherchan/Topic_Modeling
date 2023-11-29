@@ -1,8 +1,256 @@
 ---
-title: "6600: Final Project"
+title: "Business Decision Algorithm: Final Project"
+authors: Biva Sherchan, Roman Brock, Bhoomika John Pedely
 output: html_document
 date: "2023-10-13"
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
+
+**1. Of the 8 predictors, which predictors have a significant influence
+on amount spent on concessions? Which predictors are multicollinear?
+Justify your response with reasons from the analysis.**
+
+Of the 8 predictors, age, streaming, days_member and movies_seen have a
+significant influence on the amount spent on concessions as they are
+showing the p-value of less than 0.05. This is shown in the linear
+regression analysis. This finding was further validated because the
+LASSO regression model did not eliminate these variables.
+
+We used correlation plot and VIF to check for multi-collinearity. All
+the VIF values are below 5 and all the correlation values are less then
+0.5 hence, both indicating there is no multi-collinearity among the
+predictor variables.
+
+**2. Which predictors have a positive influence and which predictors
+have a negative influence on the amount spent on concessions? Which
+analysis, regression or penalized regression, helped you answer this
+question? If you ran a neural net model, can it help you find the
+significant (or not) predictors and their magnitude and direction of
+influence on the outcome?**
+
+Variables that have a positive influence are: age, jobindustrial,
+jobmedical, jobretired, jobself-employed, jobstudent,
+educationsecondary, educationtertiary, seen_alone, days_member,
+movies_seen. This means that a change in any of these variables are
+correlated with a change in amount_spent in the same direction. However,
+not all variables are significant. Of these variables, the ones that
+have a significant positive relationship with the outcome variable are
+age, days_member and movies_seen.
+
+Variables that have a negative influence are: jobentrepreneur,
+jobfreelance, jobhospitality, jobmanagement, jobtechnician, jobunknown,
+streaming, educationunknown and discount_yes. This indicates that
+changes in these variables is correlated with change in amount_spent on
+concessions in the opposite direction. Of these variables, streaming is
+the only one that has a significant negative influence.
+
+We used linear regression to answer this question because it shows the
+magnitude, direction and the significance of influence of each variable
+and its factor levels. Ridge regression can also be used to measure the
+magnitude and direction of the influence of each variables. However, it
+does not give any information on the significance of effect. LASSO
+regression shrinks all the unimportant variables to 0 without giving any
+additional information about those variables.
+
+Neural net model is a black-box method which provides predictions
+without clear or interpretable explanations and does not directly
+provide the coefficients like regression models. Hence, it would not
+help us find the significance, magnitude and direction of influence of
+predictors on the outcome like regression does.
+
+**3. Which analysis, linear regression or penalized regression, helps
+you select relevant variables? Which predictor variables would you use
+in the model? Justify your answer using the analysis. Would a Ridge or a
+LASSO help in selecting relevant predictors?**
+
+Linear regression can help us identify relevant predictors whereas LASSO
+regression automatically selects the significant variables.
+
+LASSO penalized regression selected age, streaming, days_member and
+movies_seen as relevant predictors by shrinking the coefficient
+estimates to 0. These are the variables that will be used for the model.
+
+**4. If you split the data 70-30 versus 80-20, how does it influence
+RMSE and R-squared values of the linear regression?**
+
+A 70-30 split means that 70% of the data would be used for training the
+model and the rest 30% for testing the model. When we trained the linear
+regression model on this split, the RMSE was 9.788593 and R-squared was
+0.554890.
+
+An 80-20 split means that 80% of the data would be used for training the
+model and the rest 20% for testing the model. When we trained the linear
+regression model on this split, the RMSE was 9.6496312 and R-squared was
+0.6674792.
+
+Lower RMSE indicates smaller errors in prediction and higher R-squared
+means that more variation can be explained by the predictors, meaning a
+better fitting model. We see that the model based on the 80-20 split had
+a lower RMSE and higher R-squared values. We infer that the more data we
+use for training, the better the model will perform at predicting on the
+test set.
+
+**5. Given the regression analysis, what strategies can MovieMagic come
+up with to increase amount spent on concessions? Discuss the magnitude
+and direction of the anticipated effect. Use both statistical
+justification and a simplified explanation (anticipating many
+decision-makers at MovieMagic may not know all the technical jargon).**
+
+Amount spent on concessions is significantly and positively correlated
+to movies_seen, age and days_member (largest to smallest magnitude).
+This means that an increase in any of these variables would be
+correlated to increase in concession sales. So, if MovieMagic can
+increase the number of movies watched by a customer, get customers that
+are of older age, and/or retain loyalty program members, then the amount
+spent on concessions by a customer could be increased.
+
+Amount spent on concessions has a significant, strong and negative
+relationship with the number of streaming services that a customer
+subscribes to. This means that more the number of streaming services
+that a customer subscribes to, the less chances of them spending on
+concessions during a visit to MovieMagic.
+
+In light of these findings, we recommend the following potential
+strategies to increase concession spending by MovieMagic customers -
+
+-   Loyalty program rewards and benefits: Rewarding the current loyalty
+    program members with better benefits will offer them incentive to
+    stay a loyalty program member and increase the number of movies they
+    watch, both of which factors influence have a strong influence on
+    concession sales. Some of these rewards could include increasing
+    discounts as the customer watches more movies, birthday discounts or
+    earning rewards points that can be used to watch movies for free.
+-   Senior discounts: Offering discount to all customers who are over
+    the age of 60 would be a beneficial strategy since older age and
+    concession spending have a strong positive relationship.
+-   Referral program: Introducing a referral program linked with the
+    loyalty program may also be beneficial since it would bring in more
+    loyalty program members. If both the the referrer and referee earn
+    points towards a movie, it would likely increase days_member and
+    movies_seen, leading to increased concession sales too.
+-   Subscription based service: Another potential offering could be a
+    subscription based service to compete with streaming platforms. This
+    service would let a customer enjoy a certain number of movies for a
+    monthly fee, leading to increase in movies seen by a customer which
+    has a strong positive relationship with concession sales.
+
+**6. MovieMagic wants to visualize the reviews through a wordcloud and
+wants to find out which words are used most commonly in the reviews that
+customers write for MovieMagic. Create 2 wordclouds - one for reviews
+that received 3, 4, or 5 star ratings and another with reviews that
+received 1 or 2 stars ratings. Knowing the prominent words in each of
+the wordclouds, what strategies can be developed in messaging customers?
+Would the strategies differ?**
+
+We see that in both the positive and negative reviews, food is one of
+the most prominent words. This indicates that when people go to movies,
+they are rating the experience not just based on their movie-watching,
+but also on the food items and the service / ambiance.
+
+In addition to that, most words from positive reviews are related to the
+movie-watching experience like movie, place, cinema, theater, venue,
+comfortable etc. Our recommended strategy based on this finding would be
+to advertise MovieMagic as a place that is comfortable, has a nice
+atmosphere and an overall enjoyable ambiance. Many customers would find
+this expectation well met and be satisfied with their experience. This
+would reinforce loyalty program members to stay and increase the number
+of movies watched by all customers, leading to more concession sales, as
+seen in our previous analysis.
+
+Most words from negative reviews are related to food like order, server,
+drink, meal, burger, cheese etc. Because the movie experience is liked
+and speaks for itself, we would recommend making changes to aspects
+surrounding food at MovieMagic. We strongly recommend MovieMagic to put
+more effort into ensuring that the food aspect of the MovieMagic
+experience is significantly improved. Another suggestion is to include
+healthy foods that would attract older crowd since we saw that older
+customers are more likely to spend more on concession sales. So, our
+strategy towards messaging the negative reviewers would be advertising
+based on the action we took to make the food and the services better.
+
+**7. MovieMagic also wants to use topic modeling to find out whether the
+content in the reviews could be categorized into specific topics. If you
+used LDA to create 3 topic groups (k = 3), MovieMagic wants you to use
+the words within the 3 topics to infer topic title. Which term is the
+most relevant in each of the three topics and how would it inform your
+business strategy? Given the topics you inferred what strategies would
+you suggest are possible for MovieMagic if it wants to increase
+concession sales. Would you recommend promotions or advertising or
+loyalty program;justify your choice of business strategy?**
+
+Topic 1 = Brand association. Topic 1 seems to be related to a brand
+association as we see MovieMagic is one of the most relevant term along
+with terms such as great, cinema etc. The term that is most relevant in
+this topic is "great".
+
+Topic 2 = Movie Experience. Topic 2 seems to be related to a movie
+watching experience as we see terms like movie, good, love are the most
+relevant terms. The term that is most relevant in this topic is "movie".
+
+Topic 3 = Food Experience. Topic 3 seems to be related to food
+experience as we see terms like food, popcorn, beer are the most
+relevant terms. The term that is most relevant in this topic is "food".
+
+Based on this finding, our recommended strategy is a more defined
+loyalty program. We stated earlier in our analysis, offering loyalty
+members rewards and benefits would reinforce their positive association
+with the brand, as we can see that MovieMagic is seen as place that is
+"great" and "fun". The referral program would be a successful program as
+well since people like to enjoy movies with their "friends" as derived
+from the second topic. Improving the quality and service of food,
+especially the ones mentioned in the topic model like "pizza" and
+"popcorn" would be beneficial since food is the third biggest topic
+surrounding the MovieMagic experience.
+
+As these insights are considered and implemented, days_member and
+movies_seen would likely increase, leading to an increase in concession
+sales. In addition, streaming is the biggest negative influence, so
+creating a subscription based service which offers a certain number of
+free tickets a month with discounts will also give us the ability to
+compete more directly with streamers and take a share of the habitual
+aspect of movie-watching.
+
+**8. MovieMagic asks you whether your analysis reflects a causal
+relationship. Discuss any limitations of the dataset and your analysis
+regarding causal inference. What experiment might you recommend given
+these limitations and your analysis? What would be the experimental
+design? How would this lead to a deeper understanding of what business
+strategies would work? Make sure to clearly define the input variables,
+main effects, interactive influences (if any that you want to test for)
+and the outcome variable. Example -- using the top terms from the LDA a
+3 cell experiment can be designed to find out how using these terms in
+messaging before the movie begins influences concession sales.**
+
+Regression model tells us about the magnitude and direction of the
+influence of different predictors on the outcome variable. We can just
+infer what predictors are correlated to the concession sales but we
+cannot infer whether those predictors cause changes in the concession
+sales or not. The data we may have would be an observational data that
+captures correlation but not causation hence our analysis does not
+reflect a causal relationship.
+
+An experimental study would be needed to establish causation. In context
+of this specific case, we would test for different strategies to see
+which strategy does or does not cause an increase in concession sales.
+Specifically, in order to establish a causal relationship, we would do
+AB testing.
+
+For our AB test, we will do a 3 cell experiment to determine which
+strategy i.e. promotion vs advertising vs loyalty program causes higher
+concession sales. We would offer different strategies to a random,
+representative sample of our customer base and compare it to the sample
+of customers that weren't offered. Our input variables would be the 3
+strategies we want to test i.e. promotion vs advertising vs loyalty
+program. The main effects would be if the strategies cause higher
+concession sales. The interactive influence would be if the strategies
+causes different concession sales among the customers who were loyalty
+members vs others.
+
+This experiment would deepen our understanding of consumer behaviors and
+preferences and what strategies would really increase customer spendign
+on concession sales, which an ovservational study is unable to acheive.
 
 ```{r setup, include=FALSE}
 library(glmnet)
@@ -26,8 +274,8 @@ library(reshape2)
 library(quanteda.textplots)
 ```
 
+#### Read the datasets
 
-## Read the datasets
 ```{r }
 regdf=read.csv(url("http://data.mishra.us/files/project_data.csv"))
 textdf=read.csv(url("http://data.mishra.us/files/project_reviews.csv"))
@@ -36,30 +284,35 @@ head(regdf)
 head(textdf)
 ```
 
-## Convert the categorical variables into factors
+#### Convert the categorical variables into factors
+
 ```{r }
-#regdf$education <- factor(regdf$education)
-#regdf$job <- factor(regdf$job)
-#regdf$seen_alone <- factor(regdf$seen_alone)
-#regdf$discount <- factor(regdf$discount)
+regdf$education <- factor(regdf$education)
+regdf$job <- factor(regdf$job)
+regdf$seen_alone <- factor(regdf$seen_alone)
+regdf$discount <- factor(regdf$discount)
 ```
 
-## Check the levels and their corresponding values
+#### Check the levels and their corresponding values
+
 ```{r }
-#education_levels <- levels(regdf$education)
-#job_levels <- levels(regdf$job)
-#seen_alone_levels <- levels(regdf$seen_alone)
-#discount_levels <- levels(regdf$discount)
+education_levels <- levels(regdf$education)
+job_levels <- levels(regdf$job)
+seen_alone_levels <- levels(regdf$seen_alone)
+discount_levels <- levels(regdf$discount)
 ```
 
 **Regression analysis**
-## Fit a Linear Regression model on the full dataset
+
+#### Fit a Linear Regression model on the full dataset
+
 ```{r }
 lm_model=lm(amount_spent~., data=regdf)
 summary(lm_model)
 ```
 
-## Fit a Linear Regression model on the 80/20 split dataset
+#### Fit a Linear Regression model on the 80/20 split dataset
+
 ```{r }
 set.seed(1234)
 datasplit <- createDataPartition(regdf$amount_spent, p = 0.8, list=FALSE)
@@ -68,12 +321,16 @@ testData <- regdf[-datasplit,]
 lm_model2=lm(amount_spent~., data=trainData)
 summary(lm_model2)
 ```
-## Predict results for Linear Regression model on the 80/20 split dataset
+
+#### Predict results for Linear Regression model on the 80/20 split dataset
+
 ```{r }
 predictions <- predict(lm_model2, newdata= testData)
 postResample(predictions, testData$amount_spent)
 ```
-## Fit a Linear Regression model on the 70/30 split dataset
+
+#### Fit a Linear Regression model on the 70/30 split dataset
+
 ```{r }
 set.seed(1234)
 datasplit <- createDataPartition(regdf$amount_spent, p = 0.7, list=FALSE)
@@ -83,31 +340,39 @@ lm_model3=lm(amount_spent~., data=trainData)
 summary(lm_model3)
 ```
 
-## Predict results for Linear Regression model on the 70/30 split dataset
+#### Predict results for Linear Regression model on the 70/30 split dataset
+
 ```{r }
 predictions <- predict(lm_model3, newdata= testData)
 postResample(predictions, testData$amount_spent)
 ```
-## ANOVA for significance test
+
+#### ANOVA for significance test
+
 ```{r }
 anova(lm_model)
 anova(lm_model2)
 anova(lm_model3)
 ```
 
-# Use VIF (Variance Inflation Factor) to test for multicollinearity
+#### Use VIF (Variance Inflation Factor) to test for multicollinearity
+
 ```{r }
 vif_values <- car::vif(lm_model)
 print(vif_values)
 ```
 
-## Create a correlation plot to check for multicollinearity
+#### Create a correlation plot to check for multicollinearity
+
 ```{r pressure, echo=FALSE}
 correl <- cor(regdf[,c("age","streaming","days_member","movies_seen")])
 ggcorrplot::ggcorrplot(correl,hc.order=TRUE,type="lower",lab=TRUE)
 ```
+
 **Penalized Regression**
-## Fit a Ridge Regression model
+
+#### Fit a Ridge Regression model
+
 ```{r }
 set.seed(1234)
 datasplit <- createDataPartition(regdf$amount_spent, p = 0.8, list=FALSE)
@@ -121,7 +386,8 @@ ridge_coef <- coef(ridge_model, s="lambda.min", exact=FALSE)
 print(ridge_coef)
 ```
 
-## Obtain predictions from the Ridge Regression model
+#### Obtain predictions from the Ridge Regression model
+
 ```{r }
 testpredictors <- testData[, !(names(testData) == "amount_spent")]
 pred = predict(ridge_model,newx=data.matrix(testpredictors),s="lambda.min")
@@ -141,7 +407,8 @@ cat("RMSE:", rmse, "\n")
 cat("R-squared:", r_squared, "\n")
 ```
 
-## LASSO Regression model
+#### LASSO Regression model
+
 ```{r }
 lasso_model <- cv.glmnet(x=data.matrix(trainpredictors), 
                          y=trainData$amount_spent, 
@@ -151,7 +418,8 @@ lasso_coef <- coef(lasso_model, s="lambda.min", exact=FALSE)
 print(lasso_coef)
 ```
 
-## Obtain predictions from the Lasso Regression model
+#### Obtain predictions from the Lasso Regression model
+
 ```{r }
 testpredictors <- testData[, !(names(testData) == "amount_spent")]
 pred = predict(lasso_model,newx=data.matrix(testpredictors),s="lambda.min")
@@ -173,7 +441,8 @@ cat("R-squared:", r_squared, "\n")
 
 **Text Analysis**
 
-## Create WordCloud for reviews with 3, 4 or 5 stars
+#### Create WordCloud for reviews with 3, 4 or 5 stars
+
 ```{r }
 # Filter reviews by star ratings using the original data frame
 positive_reviews_data <- textdf[textdf$star >= 3, ]
@@ -209,7 +478,8 @@ d <- data.frame(word=names(v), freq=v)
   
 ```
 
-## Create WordCloud for reviews with 1 or 2 stars
+#### Create WordCloud for reviews with 1 or 2 stars
+
 ```{r }
 # Filter reviews by star ratings using the original data frame
 negative_reviews_data <- textdf[textdf$star <= 2, ]
@@ -242,7 +512,8 @@ d <- data.frame(word=names(v), freq=v)
   
 ```
 
-## Perform a Latent Dirichlet Analysis
+#### Perform a Latent Dirichlet Analysis
+
 ```{r }
 # remove stopwords
 corpus <- VCorpus(VectorSource(textdf$text))
@@ -264,8 +535,8 @@ lda <- LDA(dtm, k = 3, method = "Gibbs", control = NULL)
 topics <- tidy(lda, matrix = "beta") # beta is the topic-word density
 ```
 
+#### Topic Modeling
 
-## Topic Modeling
 ```{r }
 top_terms <- topics %>%
   group_by(topic) %>%
@@ -280,34 +551,3 @@ top_terms %>%
   facet_wrap(~topic,scales="free") +
   coord_flip()
 ```
-
-## 1. Of the 8 predictors, which predictors have a significant influence on amount spent on concessions? Which predictors are multicollinear? Justify your response with reasons from the analysis.
-### age, streaming, days_member and movies_seen predictors have a significant influence on the amount spent on concessions as they are showing the p-value of less than 0.05.  
-### We used correlation plot and VIF to check for multicollinearity. All the VIF values are below 5 and all the correlation values are less then 0.5 hence both indicating there are no multicollinearity among the predictor variables. 
-
-## 2. Which predictors have a positive influence and which predictors have a negative influence on the amount spent on concessions? Which analysis, regression or penalized regression, helped you answer this question? If you ran a neural net model, can it help you find the significant (or not) predictors and their magnitude and direction of influence on the outcome?
-### age, job, see_alone,days_member and movies_seen have a positive influence while streaming, education and disount have negative influence on the amount spent on concessions. We used Ridge Regression Analysis for this. 
-### Neural net model is a black-box method which provides predictions whithout clear or interpretable explanations and does not directly provide the coefficients like regression models. Hence, it would not help us find the significance, magnitude and direction of influence of predictors on the outcome like regression does.
-
-## 3. Which analysis, linear regression or penalized regression, helps you select relevant variables? Which predictor variables would you use in the model? Justify your answer using the analysis. Would a Ridge or a LASSO help in selecting relevant predictors?
-### Lasso regression helps in selecting the relevant predictors by shrinking the predictor coefficient estimates to 0. age, streaming, days_member and movies_seen
-
-## 4. If you split the data 70-30 versus 80-20, how does it influence RMSE and R-squared values of the linear regression?
-### The more data we use for training, the better the test results will be. Using the 80-20 data split vs 70-30 data split the error metrics RMSE and MAE were lower and the R-squared value was higher.
-
-80/20 test
-RMSE  Rsquared       MAE 
-9.6496312 0.6674792 7.6528047 
-
-70/30 test
-RMSE Rsquared      MAE 
-9.788593 0.554890 7.802252 
-
-## 5. Given the regression analysis, what strategies can MovieMagic come up with to increase amount spent on concessions? Discuss the magnitude and direction of the anticipated effect. Use both statistical justification and a simplified explanation (anticipating many decision-makers at MovieMagic may not know all the technical jargon).
-### Targetting the loyal customers. 
-
-## 6. MovieMagic wants to visualize the reviews through a wordcloud and wants to find out which words are used most commonly in the reviews that customers write for MovieMagic. Create 2 wordclouds - one for reviews that received 3, 4, or 5 star ratings and another with reviews that received 1 or 2 stars ratings. Knowing the prominent words in each of the wordclouds, what strategies can be developed in messaging customers? Would the strategies differ?
-### We see that in both the positive and negative reviews food is one of the most prominent word. This indicates that people goto movies they are rating the experience not just based on their movie watching experience but also on the food items and the service or ambience in general of the movie theatre.  
-
-## 7. MovieMagic also wants to use topic modeling to find out whether the content in the reviews could be categorized into specific topics. If you used LDA to create 3 topic groups (k = 3), MovieMagic wants you to use the words within the 3 topics to infer topic title. Which term is the most relevant in each of the three topics and how would it inform your business strategy? Given the topics you inferred what strategies would you suggest are possible for MovieMagic if it wants to increase con-cession sales. Would you recommend promotions or advertising or loyalty program;justify your choice of business strategy?
-## Loyalty program.
